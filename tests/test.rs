@@ -3,7 +3,7 @@ use quickrand::Rng;
 
 #[test]
 fn trivial_tests() {
-  let mut g = Rng::from_seed(42);
+  let mut g = Rng::new(42);
   expect!["false"].assert_eq(&format!("{}", g.bool()));
   expect!["false"].assert_eq(&format!("{}", g.bernoulli(0.25)));
   expect!["0x6b60963a12fc9044"].assert_eq(&format!("{:#x}", g.i64()));
