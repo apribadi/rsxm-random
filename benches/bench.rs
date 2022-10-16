@@ -12,9 +12,10 @@ struct Xoroshiro128pp {
 impl Xoroshiro128pp {
   fn new(seed: u128) -> Self {
     let seed = seed | 1;
-    return Xoroshiro128pp { a: seed as u64, b: (seed >> 64) as u64 };
+    Xoroshiro128pp { a: seed as u64, b: (seed >> 64) as u64 }
   }
 
+  #[inline]
   fn u64(&mut self) -> u64 {
     let a = self.a;
     let b = self.b;
@@ -22,7 +23,32 @@ impl Xoroshiro128pp {
     let b = a ^ b;
     self.a = a.rotate_left(49) ^ b ^ b << 21;
     self.b = b.rotate_left(28);
-    return x;
+    x
+  }
+}
+
+struct Pcg64dxsm {
+  s: u128,
+}
+
+impl Pcg64dxsm {
+  fn new(seed: u128) -> Self {
+    Pcg64dxsm { s: seed }
+  }
+
+  #[inline]
+  fn u64(&mut self) -> u64 {
+    let s = self.s;
+    let a = s as u64;
+    let b = (s >> 64) as u64;
+    let a = a | 1;
+    let b = b ^ b >> 32;
+    let b = b * 0xda942042e4dd58b5;
+    let b = b ^ b >> 48;
+    let b = b * a;
+    let s = 0xda942042e4dd58b5 * s + 1;
+    self.s = s;
+    b
   }
 }
 
@@ -83,9 +109,33 @@ fn bench_xoroshiro128pp(seed: u128) -> u64 {
   return s;
 }
 
+#[inline(never)]
+fn bench_xoroshiro128ppx2(seed: u128) -> u64 {
+  let mut g0 = Xoroshiro128pp::new(seed);
+  let mut g1 = Xoroshiro128pp::new(seed + 1);
+  let mut s = 0u64;
+  for _ in 0 .. 500_000_000 {
+    s = s.wrapping_add(g0.u64());
+    s = s.wrapping_add(g1.u64());
+  }
+  return s;
+}
+
+#[inline(never)]
+fn bench_pcg64dxsm(seed: u128) -> u64 {
+  let mut g = Pcg64dxsm::new(seed);
+  let mut s = 0u64;
+  for _ in 0 .. 1_000_000_000 {
+    s = s.wrapping_add(g.u64());
+  }
+  return s;
+}
+
 fn main() {
   run_bench("xsmum128", bench_xsmum128);
   run_bench("xsmum128x2", bench_xsmum128x2);
   run_bench("xsmum128x4", bench_xsmum128x4);
   run_bench("xoroshiro128++", bench_xoroshiro128pp);
+  run_bench("xoroshiro128++x2", bench_xoroshiro128ppx2);
+  run_bench("pcg64dxsm", bench_pcg64dxsm);
 }
