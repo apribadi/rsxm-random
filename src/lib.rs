@@ -47,12 +47,12 @@ impl Rng {
 
   #[inline]
   pub fn u32(&mut self) -> u32 {
-    (self.u64() >> 32) as u32
+    self.u64() as u32
   }
 
   #[inline]
   pub fn i32(&mut self) -> i32 {
-    (self.u64() >> 32) as i32
+    self.u64() as i32
   }
 
   #[inline]
@@ -64,7 +64,7 @@ impl Rng {
 
   #[inline]
   pub fn bool(&mut self) -> bool {
-    (self.u64() as i64) >= 0
+    self.i64() >= 0
   }
 
   #[inline]
